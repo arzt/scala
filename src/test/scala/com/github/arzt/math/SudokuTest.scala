@@ -69,7 +69,7 @@ class SudokuTest extends AnyFlatSpec with Matchers {
     s.matchesCol("1", "____1") mustBe false
   }
   "get box offset 2x2" should "convert absolute index to box offset" in {
-    val s = new Sudoku(2,2)
+    val s = new Sudoku(2, 2)
     s.boxOffset(0) mustBe 0
     s.boxOffset(4) mustBe 0
     s.boxOffset(2) mustBe 2
@@ -78,7 +78,7 @@ class SudokuTest extends AnyFlatSpec with Matchers {
     s.boxOffset(15) mustBe 10
   }
   "get box offset 3x3" should "convert absolute index to box offset" in {
-    val s = new Sudoku(3,3)
+    val s = new Sudoku(3, 3)
     s.boxOffset(0) mustBe 0
     s.boxOffset(3) mustBe 3
     s.boxOffset(6) mustBe 6
@@ -86,7 +86,7 @@ class SudokuTest extends AnyFlatSpec with Matchers {
     s.boxOffset(12) mustBe 3
     s.boxOffset(15) mustBe 6
     s.boxOffset(18) mustBe 0
-    s.boxOffset(80) mustBe 6*9+2*3
+    s.boxOffset(80) mustBe 6 * 9 + 2 * 3
   }
   "get internal box offset" should "compute internal box offset" in {
     val s = new Sudoku(2, 2)
@@ -107,6 +107,15 @@ class SudokuTest extends AnyFlatSpec with Matchers {
     s.inverseBoxIndex(7) mustBe 7 + 6 + 6
     s.inverseBoxIndex(8) mustBe 8 + 6 + 6
   }
+  "get internal box offset 3x2" should "compute internal box offset" in {
+    val s = new Sudoku(3, 2)
+    s.inverseBoxIndex(0) mustBe 0
+    s.inverseBoxIndex(1) mustBe 1
+    s.inverseBoxIndex(2) mustBe 2
+    s.inverseBoxIndex(3) mustBe 3 + 3
+    s.inverseBoxIndex(4) mustBe 4 + 3
+    s.inverseBoxIndex(5) mustBe 5 + 3
+  }
   "within box offset" should "work" in {
     val s = new Sudoku(2, 2)
     s.boxIndex(0) mustBe 0
@@ -119,7 +128,7 @@ class SudokuTest extends AnyFlatSpec with Matchers {
     s.boxIndex(7) mustBe 3
   }
   "exhaustive box conversion test" should "work" in {
-    val s = new Sudoku(3,3)
+    val s = new Sudoku(3, 3)
     for (x <- 0 to s.cellCount) {
       val result = s.inverseBoxIndex(s.boxIndex(x)) + s.boxOffset(x)
       result mustBe x
@@ -137,26 +146,92 @@ class SudokuTest extends AnyFlatSpec with Matchers {
     s.matchesBox("21", "_____2") mustBe true
     s.matchesBox("21", "_____1") mustBe false
   }
-  it should "yield matching sudoku" in {
-    val s = new Sudoku(3, 3)
+  ignore should "solve sudoku 3x3" in {
     val te =
       "_3_______" +
-      "___195___" +
-      "__8____6_" +
-      "8___6____" +
-      "4__8____1" +
-      "____2____" +
-      "_6____28_" +
-      "___419__5" +
-      "_______7_"
-    val p = (x: String) => s.isValid(x) && s.matchesTemplate(x, te)
-    var su = "1"
-    while (true) {
-      while (su.length < 81) {
-        su = s.nextCandidate(p, su)
-      }
-      print(su)
-    }
-
+        "___195___" +
+        "__8____6_" +
+        "8___6____" +
+        "4__8____1" +
+        "____2____" +
+        "_6____28_" +
+        "___419__5" +
+        "_______7_"
+    val s = new Sudoku(3, 3)
+    val result = s.solve(te).map{
+      x =>
+        s.print(x)
+        x
+    }.toVector
+    result.nonEmpty mustBe true
+  }
+  it should "yield matching sudoku 2" in {
+    val s = new Sudoku(3, 3)
+    val te =
+      "827154396" +
+        "965327148" +
+        "341689752" +
+        "593468271" +
+        "472513689" +
+        "618972435" +
+        "786235914" +
+        "154796823" +
+        "239841567"
+    val result = s.solve(te).toVector
+    result.nonEmpty mustBe true
+  }
+  it should "match box 3x2" in {
+    val s = new Sudoku(3, 2)
+    val te =
+      "5 64 3" +
+        " 3  1 " +
+        "6    2" +
+        "3    4" +
+        " 6  4 " +
+        "2 46 1"
+    val su = "51642"
+    val const1 = s.matchesBox(su, te)
+    const1 mustBe true
+  }
+  it should "yield matching sudoku 2x3 in this case" in {
+    val s = new Sudoku(3, 2)
+    val te =
+      "5 64 3" +
+        " 3  1 " +
+        "6    2" +
+        "3    4" +
+        " 6  4 " +
+        "2 46 1"
+    val su = "51642343"
+    val matchesBox = s.matchesBox(su, te)
+    matchesBox mustBe true
+  }
+  val diabolical01 =
+    "57_4__83_" +
+    "9_2___5__" + 
+    "_____1___" +
+    "____82___" +
+    "2_______8" +
+    "___13____" +
+    "___6_____" +
+    "__7___6_4" +
+    "_14__5_92"
+  it should "solve diabolical01 sudoku" in {
+    val s = new Sudoku(3, 3)
+    val result = s.solve(diabolical01).toVector
+    s.solve(diabolical01).toVector
+    result.nonEmpty mustBe true
+  }
+  it should "solve sudoku 2x3" in {
+    val s = new Sudoku(3, 2)
+    val te =
+      "   4 3" +
+        " 3  1 " +
+        "     2" +
+        "3     " +
+        " 6  4 " +
+        "  4   "
+    val result = s.solve(te).toVector
+    result.nonEmpty mustBe true
   }
 }
